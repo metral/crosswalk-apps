@@ -34,10 +34,13 @@ export class WordpressApp extends pulumi.ComponentResource {
 		}, {provider: args.provider});
 
 		this.appUrl = wordpress
-			.getResourceProperty("v1/Service", "wordpress", "status")
+			.getResourceProperty("v1/Service", "eks-wp-wordpress", "status")
 			.apply(status => {
-				const endpoint = status.loadBalancer.ingress[0].hostname || status.loadBalancer.ingress[0].ip;
-				return `http://${endpoint}:80`;
+                if (status) {
+                    const endpoint = status.loadBalancer.ingress[0].hostname || status.loadBalancer.ingress[0].ip;
+                    return `http://${endpoint}:80`;
+                }
+                return ""
 			});
 
 		this.registerOutputs();
