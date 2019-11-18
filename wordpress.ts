@@ -18,7 +18,7 @@ export class WordpressApp extends pulumi.ComponentResource {
 		// Example using Typescript (pulumi/kubernetes)
 		//
 
-		const wordpress = new k8s.helm.v2.Chart("wordpress", {
+		const wordpress = new k8s.helm.v2.Chart(name, {
 			chart: "stable/wordpress",
 			version: "7.5.4",
 			transformations: [
@@ -31,12 +31,12 @@ export class WordpressApp extends pulumi.ComponentResource {
 					return o;
 				}
 			]
-		});
+		}, {provider: args.provider});
 
 		this.appUrl = wordpress
 			.getResourceProperty("v1/Service", "wordpress", "status")
 			.apply(status => {
-				const endpoint = status.loadBalancer.ingress[0].ip || status.loadBalancer.ingress[0].hostname;
+				const endpoint = status.loadBalancer.ingress[0].hostname || status.loadBalancer.ingress[0].ip;
 				return `http://${endpoint}:80`;
 			});
 

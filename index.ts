@@ -2,6 +2,7 @@ import * as k8s from "@pulumi/kubernetes";
 import * as azure from "@pulumi/azure";
 import * as pulumi from "@pulumi/pulumi";
 import * as nginx from "./nginx";
+import * as wp from "./wordpress";
 import * as config from "./config";
 
 const projectName = pulumi.getProject();
@@ -34,12 +35,21 @@ let clustersToUse: string[] = config.useCluster ? [config.useCluster] : ["eks", 
 for (const clusterName of clustersToUse) {
     const cluster = clusterConfigs[clusterName];
 
-    // Deploy the app.
-    const instance = new nginx.NginxApp(clusterName, {
+    // Deploy nginx.
+    const nginxInstance = new nginx.NginxApp(`${clusterName}-nginx`, {
         provider: cluster.provider,
     });
 
     // Get the app's public load balancer URL.
-    let instanceUrl: appUrl = {name: clusterName, url: instance.appUrl};
-    appUrls = appUrls.concat(instanceUrl);
+    let nginxInstanceUrl: appUrl = {name: clusterName, url: nginxInstance.appUrl};
+    appUrls = appUrls.concat(nginxInstanceUrl);
+
+    // Deploy wp.
+    const wpInstance = new wp.WordpressApp(`${clusterName}-wp`, {
+        provider: cluster.provider,
+    });
+
+    // Get the app's public load balancer URL.
+    let wpInstanceUrl: appUrl = {name: clusterName, url: wpInstance.appUrl};
+    appUrls = appUrls.concat(wpInstanceUrl);
 }
